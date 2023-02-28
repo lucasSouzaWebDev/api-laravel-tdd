@@ -5,12 +5,12 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
+use App\Models\Book;
+
 class BooksController extends Controller
 {
-    public function index()
+    public function index(Book $book)
     {
-        return response()->json([
-            ['id' => '1'], ['id' => '2'], ['id' => '3']
-        ]);
+        return response()->json($book->all());
     }
 }
