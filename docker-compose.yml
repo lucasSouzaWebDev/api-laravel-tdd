@@ -1,0 +1,60 @@
+version: "3.7"
+
+services:
+  # Image project
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    working_dir: /var/www/
+    volumes:
+      - ./:/var/www
+    networks:
+      - app-network
+  
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - ./:/var/www
+      - ./.docker/nginx/:/etc/nginx/conf.d/
+    networks:
+      - app-network
+  
+  mysql:
+    image: mysql:5.7.22
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_USER: ${DB_USERNAME}
+    volumes:
+      - ./.docker/mysql/dbdata:/var/lib/mysql
+    ports:
+      - "3307:${DB_PORT}"
+    networks:
+      - app-network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: root
+      PMA_PASSWORD: root
+    ports:
+      - "8081:80"
+    depends_on:
+      - mysql
+    networks:
+      - app-network
+    volumes:
+      - ./.docker/phpmyadmin/config.user.inc.php:/etc/phpmyadmin/config.user.inc.php
+      - ./.docker/phpmyadmin/php/php-phpmyadmin.ini:/usr/local/etc/php/conf.d/php-phpmyadmin.ini
+
+networks:
+  app-network:
+      driver: bridge
